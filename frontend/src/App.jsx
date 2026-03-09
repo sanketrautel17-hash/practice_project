@@ -7,6 +7,9 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import OTPVerify from './pages/OTPVerify';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ApplicationForm from './pages/ApplicationForm';
@@ -19,9 +22,16 @@ function App() {
           <Navbar />
           <main className="flex-grow">
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<OTPVerify />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+              {/* Google OAuth callback — AuthContext handles the token in the URL */}
+              <Route path="/auth/callback" element={<UserDashboard />} />
 
               {/* User Protected Routes */}
               <Route path="/dashboard" element={
@@ -45,7 +55,7 @@ function App() {
             </Routes>
           </main>
           <footer className="bg-dark-900 text-white py-8 text-center text-sm">
-            <p>&copy; 2026 Admin Portal. All rights reserved.</p>
+            <p>&copy; 2026 NetCafe Connect. All rights reserved.</p>
           </footer>
         </div>
         <Toaster position="top-right" />

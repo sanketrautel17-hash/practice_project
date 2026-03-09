@@ -10,17 +10,21 @@ const protect = async (req, res, next) => {
     ) {
         try {
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret123');
 
-            req.user = await User.findById(decoded.id).select('-password');
+            req.user = await User.findById(decoded.id).select('-password -otp -resetPasswordToken');
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'User not found, not authorized' });
+            }
+
             next();
         } catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            console.error('Auth middleware error:', error.message);
+            return res.status(401).json({ message: 'Not authorized, token failed' });
         }
-    }
-
-    if (!token) {
+    } else {
+        // No Bearer token found at all
         res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
