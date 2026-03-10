@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -11,6 +12,36 @@ const Login = () => {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: credentialResponse.credential }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Google login failed');
+
+            login(data);
+            if (data.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                if (!data.isProfileComplete) navigate('/profile-setup');
+                else navigate('/dashboard');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleError = () => {
+        setError('Google Login failed. Please try again.');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +68,11 @@ const Login = () => {
             if (data.role === 'admin') {
                 navigate('/admin/dashboard');
             } else {
-                navigate('/dashboard');
+                if (!data.isProfileComplete) {
+                    navigate('/profile-setup');
+                } else {
+                    navigate('/dashboard');
+                }
             }
         } catch (err) {
             setError(err.message);
@@ -135,6 +170,25 @@ const Login = () => {
                             </button>
                         </div>
                     </form>
+
+                    <div className="mt-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleError}
+                                useOneTap
+                            />
+                        </div>
+                    </div>
 
                     <div className="mt-8 text-center text-sm">
                         <span className="text-gray-500">Don't have an account? </span>

@@ -47,6 +47,8 @@ const UserDashboard = () => {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processingPayment, setProcessingPayment] = useState(null);
+    const [availableExams, setAvailableExams] = useState([]);
+    const [examsLoading, setExamsLoading] = useState(true);
 
     const fetchApps = async () => {
         try {
@@ -60,9 +62,22 @@ const UserDashboard = () => {
         }
     };
 
+    const fetchExams = async () => {
+        try {
+            const res = await fetch('/api/exams');
+            const data = await res.json();
+            setAvailableExams(data);
+        } catch (error) {
+            console.error("Failed to fetch exams", error);
+        } finally {
+            setExamsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             fetchApps();
+            fetchExams();
         }
     }, [user]);
 
@@ -111,11 +126,48 @@ const UserDashboard = () => {
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">Student Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Welcome back, {user?.name}. Track and manage your applications below.</p>
+                    <p className="text-gray-500 mt-1">Welcome back, {user?.name}.</p>
                 </div>
-                <Link to="/apply" className="hidden sm:flex bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md items-center gap-2 transition-all hover:-translate-y-0.5">
-                    <FileText className="w-4 h-4" /> New Application
-                </Link>
+            </div>
+
+            <div className="mb-10">
+                <div className="flex justify-between items-end mb-4 border-b border-gray-100 pb-2">
+                    <h2 className="text-xl font-bold text-gray-900">Available Exams & Jobs</h2>
+                    <div className="text-sm">
+                        <span className="text-gray-500 hidden sm:inline">Profile Status: </span>
+                        <span className={user?.isProfileComplete ? "text-green-600 font-medium" : "text-red-600 font-medium"}>{user?.isProfileComplete ? "Complete" : "Incomplete"}</span>
+                        <span className="mx-2 text-gray-300">|</span>
+                        <Link to="/profile-setup" className="text-primary-600 hover:text-primary-700 font-semibold">{user?.isProfileComplete ? "Edit Profile" : "Complete Profile To Apply"}</Link>
+                    </div>
+                </div>
+
+                {examsLoading ? (
+                    <div className="flex justify-center p-6"><div className="w-6 h-6 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div></div>
+                ) : availableExams.length === 0 ? (
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-8 text-center text-gray-500">No exams or opportunities are currently available. Please check back later.</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {availableExams.map(exam => (
+                            <div key={exam.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">{exam.name}</h3>
+                                <p className="text-sm text-gray-500 mb-4 flex-grow">Apply now for {exam.name}. Ensure your master profile is complete before starting.</p>
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-0.5">Application Fee</p>
+                                        <p className="font-bold text-gray-800">₹{exam.fees?.general || 0}</p>
+                                    </div>
+                                    <Link to={`/apply?examId=${exam.id}`} className="bg-primary-50 hover:bg-primary-600 text-primary-700 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                        Apply Now
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-2">Track Previous Applications</h2>
             </div>
 
             <div className="space-y-6">
@@ -124,10 +176,10 @@ const UserDashboard = () => {
                 ) : applications.length === 0 ? (
                     <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
                         <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-900">No applications yet</h3>
-                        <p className="text-gray-500 mb-6">You haven't applied for any exams yet.</p>
+                        <h3 className="text-lg font-bold text-gray-900">No applications to track</h3>
+                        <p className="text-gray-500 mb-6">You haven't applied for any exams or jobs yet.</p>
                         <Link to="/apply" className="inline-flex bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md items-center gap-2 transition-all">
-                            Start Your First Application
+                            Apply Now
                         </Link>
                     </div>
                 ) : (

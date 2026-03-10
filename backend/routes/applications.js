@@ -113,9 +113,9 @@ router.post('/verify', async (req, res) => {
 import { upload } from '../config/cloudinaryConfig.js';
 
 // @desc    Upload documents to Cloudinary
-// @route   POST /api/upload
+// @route   POST /api/applications/upload
 // @access  Public (Should be private in production)
-router.post('/upload', upload.array('files', 5), (req, res) => {
+router.post('/upload', upload.array('files', 15), (req, res) => {
     try {
         const uploadedDocs = req.files.map(file => ({
             fileName: file.originalname,

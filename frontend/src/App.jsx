@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ApplicationForm from './pages/ApplicationForm';
+import ProfileCompletion from './pages/ProfileCompletion';
 
 function App() {
   return (
@@ -33,6 +34,12 @@ function App() {
               <Route path="/apply" element={
                 <PrivateRoute roleRequired="user">
                   <ApplicationForm />
+                </PrivateRoute>
+              } />
+
+              <Route path="/profile-setup" element={
+                <PrivateRoute roleRequired="user">
+                  <ProfileCompletion />
                 </PrivateRoute>
               } />
 
