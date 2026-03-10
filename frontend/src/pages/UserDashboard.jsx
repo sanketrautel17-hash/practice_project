@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/useAuth';
 import { Link } from 'react-router-dom';
 import { CheckCircle, Clock, CreditCard, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -50,35 +50,34 @@ const UserDashboard = () => {
     const [availableExams, setAvailableExams] = useState([]);
     const [examsLoading, setExamsLoading] = useState(true);
 
-    const fetchApps = async () => {
-        try {
-            const res = await fetch(`/api/applications/my?userId=${user?._id || '2'}`);
-            const data = await res.json();
-            setApplications(data);
-        } catch (error) {
-            console.error("Failed to fetch applications", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchExams = async () => {
-        try {
-            const res = await fetch('/api/exams');
-            const data = await res.json();
-            setAvailableExams(data);
-        } catch (error) {
-            console.error("Failed to fetch exams", error);
-        } finally {
-            setExamsLoading(false);
-        }
-    };
-
     useEffect(() => {
-        if (user) {
-            fetchApps();
-            fetchExams();
+        if (!user) {
+            return;
         }
+
+        const fetchDashboardData = async () => {
+            try {
+                const [applicationsRes, examsRes] = await Promise.all([
+                    fetch(`/api/applications/my?userId=${user._id || '2'}`),
+                    fetch('/api/exams')
+                ]);
+
+                const [applicationsData, examsData] = await Promise.all([
+                    applicationsRes.json(),
+                    examsRes.json()
+                ]);
+
+                setApplications(applicationsData);
+                setAvailableExams(examsData);
+            } catch (error) {
+                console.error("Failed to load dashboard data", error);
+            } finally {
+                setLoading(false);
+                setExamsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
     }, [user]);
 
     const handlePayment = async (appId, amount) => {
@@ -109,7 +108,13 @@ const UserDashboard = () => {
 
             if (verifyRes.ok) {
                 toast.success("Payment successful! Application status updated to 'Payment Done'.");
-                fetchApps();
+                try {
+                    const refreshedAppsRes = await fetch(`/api/applications/my?userId=${user?._id || '2'}`);
+                    const refreshedAppsData = await refreshedAppsRes.json();
+                    setApplications(refreshedAppsData);
+                } catch (refreshError) {
+                    console.error("Failed to refresh applications", refreshError);
+                }
             }
 
         } catch (error) {
@@ -177,7 +182,7 @@ const UserDashboard = () => {
                     <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
                         <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-gray-900">No applications to track</h3>
-                        <p className="text-gray-500 mb-6">You haven't applied for any exams or jobs yet.</p>
+                        <p className="text-gray-500 mb-6">You haven&apos;t applied for any exams or jobs yet.</p>
                         <Link to="/apply" className="inline-flex bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md items-center gap-2 transition-all">
                             Apply Now
                         </Link>

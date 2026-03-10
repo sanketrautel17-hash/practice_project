@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { UploadCloud, CheckCircle, ArrowRight, User } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,6 +10,20 @@ const ProfileCompletion = () => {
 
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
+    const [config, setConfig] = useState({ requiredDocuments: [], customFields: [] });
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const res = await fetch('/api/admin/profile-config');
+                const data = await res.json();
+                setConfig(data);
+            } catch (err) {
+                console.error("Failed to fetch admin config", err);
+            }
+        };
+        fetchConfig();
+    }, []);
 
     const [formData, setFormData] = useState({
         personalDetails: {
@@ -20,6 +34,7 @@ const ProfileCompletion = () => {
             email: user?.profileData?.personalDetails?.email || user?.email || '',
             mobile: user?.profileData?.personalDetails?.mobile || user?.mobile || '',
         },
+        customFields: user?.profileData?.customFields || {},
         hasDiploma: user?.profileData?.hasDiploma || false,
     });
 
@@ -97,9 +112,20 @@ const ProfileCompletion = () => {
     const validateStep1 = () => {
         const { firstName, lastName, fatherName, email, mobile } = formData.personalDetails;
         if (!firstName || !lastName || !fatherName || !email || !mobile) {
-            toast.error("Please fill all mandatory fields.");
+            toast.error("Please fill all mandatory personal details.");
             return false;
         }
+
+        // Validate dynamically added custom fields
+        const customFieldsArr = config.customFields || [];
+        for (const field of customFieldsArr) {
+            const fieldValue = formData.customFields ? formData.customFields[field.id] : null;
+            if (!fieldValue || !fieldValue.trim()) {
+                toast.error(`Please fill the mandatory field: ${field.name}`);
+                return false;
+            }
+        }
+
         return true;
     };
 
@@ -143,6 +169,7 @@ const ProfileCompletion = () => {
 
             const profileData = {
                 personalDetails: formData.personalDetails,
+                customFields: formData.customFields,
                 documents: uploadedDocs
             };
 
@@ -241,7 +268,7 @@ const ProfileCompletion = () => {
                                     <input type="text" name="lastName" value={formData.personalDetails.lastName} onChange={handlePersonalChange} required className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Father's Name <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Father&apos;s Name <span className="text-red-500">*</span></label>
                                     <input type="text" name="fatherName" value={formData.personalDetails.fatherName} onChange={handlePersonalChange} required className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500" />
                                 </div>
                                 <div>
@@ -252,6 +279,19 @@ const ProfileCompletion = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
                                     <input type="tel" name="mobile" value={formData.personalDetails.mobile} onChange={handlePersonalChange} maxLength="10" required className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500" placeholder="10-digit mobile" />
                                 </div>
+                                {config.customFields?.map(field => (
+                                    <div key={field.id} className="col-span-1 border border-primary-100 bg-primary-50/30 p-4 rounded-xl shadow-sm">
+                                        <label className="block text-sm font-semibold text-primary-900 mb-1">{field.name} <span className="text-red-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            value={formData.customFields[field.id] || ''}
+                                            onChange={(e) => setFormData({ ...formData, customFields: { ...formData.customFields, [field.id]: e.target.value } })}
+                                            required
+                                            className="w-full px-4 py-2 border border-primary-200 rounded-xl focus:ring-primary-500 focus:border-primary-500"
+                                            placeholder={`Enter ${field.name}`}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

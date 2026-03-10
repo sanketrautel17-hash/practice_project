@@ -10,6 +10,7 @@ let applications = [
         id: 'app_1',
         userId: '2', // matches Test Student from auth.js
         personalDetails: { fullName: "Test Student", dob: "2000-01-01", fatherName: "Mr. Smith", motherName: "Mrs. Smith", address: "123 Exam St", mobile: "9876543210", email: "user@example.com", aadharNumber: "123456789012" },
+        customFields: {},
         examType: { _id: "e1", name: "NEET UG 2026" },
         category: "general",
         fee: 1500,
@@ -32,6 +33,7 @@ router.post('/', async (req, res) => {
         id: 'app_' + Math.random().toString(36).substr(2, 9),
         userId: appData.userId || '2', // fallback if none provided
         personalDetails: appData.personalDetails,
+        customFields: appData.customFields || {},
         examType: appData.examType,
         category: appData.category,
         fee: appData.fee,
@@ -75,6 +77,32 @@ router.patch('/:id/status', async (req, res) => {
 
     if (appIndex !== -1) {
         applications[appIndex].status = status;
+        res.json(applications[appIndex]);
+    } else {
+        res.status(404).json({ message: 'Application not found' });
+    }
+});
+
+// @desc    Update application personal details (ADMIN)
+// @route   PATCH /api/applications/:id/details
+// @access  Private (Admin)
+router.patch('/:id/details', async (req, res) => {
+    const { personalDetails, customFields } = req.body;
+    const appIndex = applications.findIndex(app => app.id === req.params.id);
+
+    if (appIndex !== -1) {
+        if (personalDetails) {
+            applications[appIndex].personalDetails = {
+                ...applications[appIndex].personalDetails,
+                ...personalDetails
+            };
+        }
+        if (customFields) {
+            applications[appIndex].customFields = {
+                ...applications[appIndex].customFields,
+                ...customFields
+            };
+        }
         res.json(applications[appIndex]);
     } else {
         res.status(404).json({ message: 'Application not found' });

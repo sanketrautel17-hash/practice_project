@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, ArrowRight, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -78,6 +78,7 @@ const ApplicationForm = () => {
             const submitData = {
                 userId: user?._id,
                 personalDetails: user?.profileData?.personalDetails,
+                customFields: user?.profileData?.customFields || {},
                 examType: exams.find(e => e.id === formData.examId),
                 category: formData.category,
                 fee: calculatedFee,
@@ -186,7 +187,7 @@ const ApplicationForm = () => {
                                     {personalDetails && (
                                         <>
                                             <div><p className="text-xs text-gray-500">Name</p><p className="font-medium text-gray-900">{personalDetails.firstName} {personalDetails.lastName}</p></div>
-                                            <div><p className="text-xs text-gray-500">Father's Name</p><p className="font-medium text-gray-900">{personalDetails.fatherName}</p></div>
+                                            <div><p className="text-xs text-gray-500">Father&apos;s Name</p><p className="font-medium text-gray-900">{personalDetails.fatherName}</p></div>
                                             <div><p className="text-xs text-gray-500">Email</p><p className="font-medium text-gray-900">{personalDetails.email}</p></div>
                                             <div><p className="text-xs text-gray-500">Phone</p><p className="font-medium text-gray-900">{personalDetails.mobile}</p></div>
                                         </>

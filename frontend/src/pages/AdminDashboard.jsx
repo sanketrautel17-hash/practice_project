@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { BookOpen, Users, LogOut, FileText, CheckCircle, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../context/useAuth';
+import { BookOpen, FileText, Settings } from 'lucide-react';
 import ManageExams from './ManageExams';
 import ManageProfileConfig from './ManageProfileConfig';
 import AdminApplications from './AdminApplications';
 
 const AdminDashboard = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('applications'); // 'applications' or 'exams'
 
     return (

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, MapPin, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { GoogleLogin } from '@react-oauth/google';
+import { readApiResponse } from '../utils/http';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -27,7 +28,7 @@ const Register = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: credentialResponse.credential }),
             });
-            const data = await res.json();
+            const data = await readApiResponse(res);
             if (!res.ok) throw new Error(data.message || 'Google signup failed');
 
             login(data);
@@ -62,10 +63,10 @@ const Register = () => {
                 body: JSON.stringify(formData),
             });
 
-            const data = await res.json();
+            const data = await readApiResponse(res);
 
             if (!res.ok) {
-                throw new Error(data.message || 'Error occurred during registration');
+                throw new Error(data.message || `Registration failed (HTTP ${res.status})`);
             }
 
             login(data); // Auto login user globally

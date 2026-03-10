@@ -72,7 +72,8 @@ let profileConfig = {
         { id: '10th', name: '10th Marksheet' },
         { id: '12th', name: '12th Marksheet' },
         { id: 'passport', name: 'Passport Size Photo' }
-    ]
+    ],
+    customFields: []
 };
 
 // @route   GET /api/admin/profile-config
@@ -84,7 +85,8 @@ router.get('/profile-config', (req, res) => {
 // @route   PUT /api/admin/profile-config
 // @desc    Update master profile requirements
 router.put('/profile-config', (req, res) => {
-    profileConfig.requiredDocuments = req.body.requiredDocuments;
+    if (req.body.requiredDocuments) profileConfig.requiredDocuments = req.body.requiredDocuments;
+    if (req.body.customFields) profileConfig.customFields = req.body.customFields;
     res.json(profileConfig);
 });
 

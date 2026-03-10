@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { GoogleLogin } from '@react-oauth/google';
+import { readApiResponse } from '../utils/http';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ const Login = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: credentialResponse.credential }),
             });
-            const data = await res.json();
+            const data = await readApiResponse(res);
             if (!res.ok) throw new Error(data.message || 'Google login failed');
 
             login(data);
@@ -57,10 +58,10 @@ const Login = () => {
                 body: JSON.stringify({ email, password }),
             });
 
-            const data = await res.json();
+            const data = await readApiResponse(res);
 
             if (!res.ok) {
-                throw new Error(data.message || 'Error occurred during login');
+                throw new Error(data.message || `Login failed (HTTP ${res.status})`);
             }
 
             login(data); // Set user globally
@@ -191,7 +192,7 @@ const Login = () => {
                     </div>
 
                     <div className="mt-8 text-center text-sm">
-                        <span className="text-gray-500">Don't have an account? </span>
+                        <span className="text-gray-500">Don&apos;t have an account? </span>
                         <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
                             Create an account
                         </Link>

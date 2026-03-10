@@ -1,8 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-
-const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
+import { useState, useEffect } from 'react';
+import { AuthContext } from './AuthContextObject';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -12,7 +9,11 @@ export const AuthProvider = ({ children }) => {
         // Check if user info and token exist in localStorage
         const storedUser = localStorage.getItem('userInfo');
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch {
+                localStorage.removeItem('userInfo');
+            }
         }
         setLoading(false);
     }, []);

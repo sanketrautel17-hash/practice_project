@@ -1,15 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, Edit, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AdminApplications = () => {
     const [applications, setApplications] = useState([]);
+    const [config, setConfig] = useState({ customFields: [] });
     const [loading, setLoading] = useState(true);
     const [viewingApp, setViewingApp] = useState(null);
+    const [editMode, setEditMode] = useState(false);
+    const [editedDetails, setEditedDetails] = useState({});
+    const [editedCustomFields, setEditedCustomFields] = useState({});
 
     useEffect(() => {
         fetchApplications();
+        fetchConfig();
     }, []);
+
+    const fetchConfig = async () => {
+        try {
+            const res = await fetch('/api/admin/profile-config');
+            const data = await res.json();
+            setConfig(data);
+        } catch (error) {
+            console.error("Failed to fetch config", error);
+        }
+    };
 
     const fetchApplications = async () => {
         try {
@@ -41,6 +56,42 @@ const AdminApplications = () => {
         } catch (error) {
             console.error("Failed to update status", error);
             toast.error("An error occurred");
+        }
+    };
+
+    const handleEditDetailsChange = (e) => {
+        setEditedDetails({
+            ...editedDetails,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleEditCustomDetailsChange = (fieldId, value) => {
+        setEditedCustomFields({
+            ...editedCustomFields,
+            [fieldId]: value
+        });
+    };
+
+    const handleSaveDetails = async () => {
+        try {
+            const res = await fetch(`/api/applications/${viewingApp.id}/details`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ personalDetails: editedDetails, customFields: editedCustomFields }),
+            });
+            if (res.ok) {
+                toast.success('Personal details updated successfully');
+                const updatedApp = await res.json();
+                setViewingApp(updatedApp);
+                setEditMode(false);
+                fetchApplications();
+            } else {
+                toast.error('Failed to update details');
+            }
+        } catch (error) {
+            console.error('Failed to update details', error);
+            toast.error('An error occurred');
         }
     };
 
@@ -101,7 +152,12 @@ const AdminApplications = () => {
                                     <td className="py-4 px-4 text-right">
                                         <div className="flex flex-col gap-2 items-end">
                                             <button
-                                                onClick={() => setViewingApp(app)}
+                                                onClick={() => {
+                                                    setViewingApp(app);
+                                                    setEditedDetails(app.personalDetails || {});
+                                                    setEditedCustomFields(app.customFields || {});
+                                                    setEditMode(false);
+                                                }}
                                                 className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors w-32 flex justify-center items-center gap-1"
                                             >
                                                 <Eye className="w-3 h-3" /> Details
@@ -161,36 +217,66 @@ const AdminApplications = () => {
                             <div className="space-y-8">
                                 {/* Personal Details Section */}
                                 <section>
-                                    <h4 className="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Personal Information</h4>
+                                    <div className="flex justify-between items-center border-b pb-2 mb-4">
+                                        <h4 className="text-lg font-semibold text-gray-800">Personal Information</h4>
+                                        {editMode ? (
+                                            <div className="space-x-2">
+                                                <button onClick={() => setEditMode(false)} className="text-sm text-gray-600 hover:text-gray-800 font-medium">Cancel</button>
+                                                <button onClick={handleSaveDetails} className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1 rounded text-sm font-semibold transition-colors">Save</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => setEditMode(true)} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                                <Edit className="w-4 h-4" /> Edit
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Full Name</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.fullName}</p>
+                                            {editMode ? <input type="text" name="fullName" value={editedDetails.fullName || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.fullName}</p>}
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Date of Birth</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.dob}</p>
+                                            {editMode ? <input type="date" name="dob" value={editedDetails.dob || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.dob}</p>}
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Aadhar Number</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.aadharNumber}</p>
+                                            {editMode ? <input type="text" name="aadharNumber" value={editedDetails.aadharNumber || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.aadharNumber}</p>}
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Mobile Number</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.mobile}</p>
+                                            {editMode ? <input type="text" name="mobile" value={editedDetails.mobile || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.mobile}</p>}
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold">Father's Name</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.fatherName}</p>
+                                            <p className="text-xs text-gray-500 uppercase font-semibold">Father&apos;s Name</p>
+                                            {editMode ? <input type="text" name="fatherName" value={editedDetails.fatherName || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.fatherName}</p>}
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold">Mother's Name</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.motherName}</p>
+                                            <p className="text-xs text-gray-500 uppercase font-semibold">Mother&apos;s Name</p>
+                                            {editMode ? <input type="text" name="motherName" value={editedDetails.motherName || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none" /> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.motherName}</p>}
                                         </div>
                                         <div className="col-span-2">
                                             <p className="text-xs text-gray-500 uppercase font-semibold">Mailing Address</p>
-                                            <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.address}</p>
+                                            {editMode ? <textarea name="address" rows="2" value={editedDetails.address || ''} onChange={handleEditDetailsChange} className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none"></textarea> : <p className="text-sm font-medium text-gray-900">{viewingApp.personalDetails?.address}</p>}
                                         </div>
+
+                                        {/* Dynamic Custom Fields Rendering */}
+                                        {config.customFields?.length > 0 && config.customFields.map((field) => (
+                                            <div key={field.id} className="col-span-1">
+                                                <p className="text-xs text-gray-500 uppercase font-semibold">{field.name}</p>
+                                                {editMode ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editedCustomFields[field.id] || ''}
+                                                        onChange={(e) => handleEditCustomDetailsChange(field.id, e.target.value)}
+                                                        className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary-500 outline-none"
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm font-medium text-gray-900">{viewingApp.customFields?.[field.id] || 'N/A'}</p>
+                                                )}
+                                            </div>
+                                        ))}
+
                                     </div>
                                 </section>
 

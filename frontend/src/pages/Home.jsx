@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, FileText, CheckCircle, ShieldCheck } from 'lucide-react';
 
@@ -66,7 +65,7 @@ const Home = () => {
                             </div>
                             <h3 className="text-2xl font-bold text-dark-800 mb-3">Live Application Status</h3>
                             <p className="text-gray-600 leading-relaxed">
-                                Stop wondering. Watch your application progress from "Submitted" to "Under Review" and finalize your payment instantly when requested.
+                                Stop wondering. Watch your application progress from &quot;Submitted&quot; to &quot;Under Review&quot; and finalize your payment instantly when requested.
                             </p>
                         </div>
 
